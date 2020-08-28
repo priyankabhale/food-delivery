@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.test.fooddelivery.dao.Customer;
@@ -37,23 +38,30 @@ public class OrderController {
   public List<Orders> getOrders(@RequestParam(value = "email", required = true) String email) {
 //    get customer info
     Customer cust = custRepo.findByEmail(email);
-
-    return orderRepo.findByCustomer(cust.getId());
+    if (cust != null) {
+      List<Orders> orders = orderRepo.findByCustomer(cust.getId()).orElse(null);
+      if (orders != null && !orders.isEmpty())
+        return orders;
+      else
+        return null;
+    } else {
+      return null;
+    }
   }
 
   @PostMapping("/order")
-  public void fetchFood(@RequestBody OrderPojo pojo) {
+  public @ResponseBody Long fetchFood(@RequestBody OrderPojo pojo) {
     Orders orders = new Orders();
 
     Customer cust = custRepo.findByEmail(pojo.getEmail());
-    if(cust==null) {
+    if (cust == null) {
       Customer c = new Customer();
       c.setEmail(pojo.getEmail());
       c.setName(pojo.getEmail().substring(0, pojo.getEmail().indexOf("@")));
       custRepo.save(c);
       cust = c;
     }
-      
+
     orders.setCustomer(cust);
 
     orders.setDestination(pojo.getDest());
@@ -65,23 +73,24 @@ public class OrderController {
     orders.setFoodmenu(foodmenuList);
 
     orderRepo.save(orders);
+    return orders.getId();
   }
 
-  @PutMapping("/order")
-  public void fetchFood(@RequestBody Orders order) {
-    Orders validOrder = orderRepo.findById(order.getId()).get();
-    if(validOrder != null) {
+  @PutMapping("/order/{orderId}")
+  public @ResponseBody Orders fetchFood(@RequestBody Orders order, @PathVariable("orderId") long id) {
+    Orders validOrder = orderRepo.findById(id).get();
+    if (validOrder != null) {
       orderRepo.save(order);
     }
+    return order;
   }
 
   @DeleteMapping("/order/{orderId}")
   public void fetchFood(@PathVariable("orderId") long id) {
     Orders validOrder = orderRepo.findById(id).get();
-    if(validOrder != null) {
+    if (validOrder != null) {
       orderRepo.delete(validOrder);
     }
   }
-  
-  
+
 }

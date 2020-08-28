@@ -18,7 +18,7 @@ public class FoodController {
   @Autowired
   FoodMenuRepository foodRepo;
 
-  @GetMapping("/food")
+  @GetMapping("/foodmenu")
   public @ResponseBody List<FoodMenu> fetchFood() {
     List<FoodMenu> menu = new ArrayList<>();
     menu = foodRepo.findAll();
